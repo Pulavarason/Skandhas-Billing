@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CircleDollarSign } from "lucide-react";
+import { CircleDollarSign, FilePlus2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
 import EmptyState from "@/components/EmptyState";
@@ -34,6 +34,7 @@ export default function DuesPage() {
       <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Total outstanding</p>
       <p className="mt-1 text-2xl font-bold text-amber-900 dark:text-amber-200">{formatCurrency(totalDue)}</p>
       <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">Across {dueBills.length} unpaid bill{dueBills.length === 1 ? "" : "s"}</p>
+      <Link href="/due-bills/create" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-spice-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-spice-700"><FilePlus2 className="h-4 w-4" /> Create Due Bill</Link>
     </div>
     {dueBills.length === 0 ? <EmptyState icon={CircleDollarSign} title="No outstanding dues" description="Partially paid and unpaid bills will appear here." /> : (
       <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-soft">
