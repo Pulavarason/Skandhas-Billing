@@ -90,6 +90,7 @@ export default function BillsPage() {
                   <th className="px-5 py-3">Date</th>
                   <th className="px-5 py-3">Customer</th>
                   <th className="px-5 py-3 text-right">Amount</th>
+                  <th className="px-5 py-3 text-right">Due</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -105,6 +106,9 @@ export default function BillsPage() {
                     </td>
                     <td className="px-5 py-3.5 text-right font-semibold text-[rgb(var(--text))]">
                       {formatCurrency(bill.grandTotal)}
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-semibold text-amber-700 dark:text-amber-400">
+                      {(bill.dueAmount ?? 0) > 0 ? formatCurrency(bill.dueAmount ?? 0) : "—"}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex justify-end gap-1">
@@ -145,6 +149,7 @@ export default function BillsPage() {
                 <div className="mt-1 flex items-center justify-between text-xs text-[rgb(var(--text-muted))]">
                   <span>{formatDateDisplay(bill.date)}</span>
                   <span>{bill.customerName || "\u2014"}</span>
+                  {(bill.dueAmount ?? 0) > 0 && <span className="font-semibold text-amber-700 dark:text-amber-400">Due {formatCurrency(bill.dueAmount ?? 0)}</span>}
                 </div>
               </Link>
             ))}

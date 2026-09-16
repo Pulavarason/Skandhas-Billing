@@ -5,7 +5,7 @@ import { formatBillNumber } from "./format";
 // data from earlier versions out of the new empty workspace.
 const STORAGE_KEY = "skandhas-masala-data-v2";
 const LEGACY_STORAGE_KEY = "skandhas-masala-data-v1";
-const APP_VERSION = 1;
+const APP_VERSION = 2;
 
 export class StorageError extends Error {}
 
@@ -35,6 +35,21 @@ function isValidAppData(data: unknown): data is AppData {
   if (!d.settings || typeof d.settings !== "object") return false;
   if (typeof d.billCounter !== "number") return false;
   return true;
+}
+
+/** Add payment fields introduced after the first release without changing old bills. */
+function normalizeData(data: AppData): AppData {
+  return {
+    ...data,
+    version: APP_VERSION,
+    bills: data.bills.map((bill) => {
+      const deliveryCharge = Number.isFinite(bill.deliveryCharge) ? Math.max(0, bill.deliveryCharge) : 0;
+      const grandTotal = Number.isFinite(bill.grandTotal) ? bill.grandTotal : 0;
+      // Bills created before dues existed were already completed invoices.
+      const paidAmount = Number.isFinite(bill.paidAmount) ? Math.min(Math.max(bill.paidAmount!, 0), grandTotal) : grandTotal;
+      return { ...bill, deliveryCharge, paidAmount, dueAmount: Math.max(0, grandTotal - paidAmount) };
+    })
+  };
 }
 
 function isLocalStorageAvailable(): boolean {
@@ -70,7 +85,7 @@ export function loadData(): AppData {
     if (!isValidAppData(parsed)) {
       throw new StorageError("Corrupted data shape");
     }
-    return parsed;
+    return normalizeData(parsed);
   } catch (err) {
     // Corrupted / invalid JSON — recover gracefully instead of crashing the app.
     const initial = createEmptyData();
@@ -132,6 +147,10 @@ export function deleteBillFromData(data: AppData, billId: string): AppData {
   return { ...data, bills: data.bills.filter((b) => b.id !== billId) };
 }
 
+export function updateBillInData(data: AppData, bill: Bill): AppData {
+  return { ...data, bills: data.bills.map((existing) => (existing.id === bill.id ? bill : existing)) };
+}
+
 export function updateSettingsInData(
   data: AppData,
   settings: BusinessSettings
@@ -164,7 +183,7 @@ export function parseBackupFile(raw: string): AppData {
       "This backup file doesn't match the expected format."
     );
   }
-  return candidate;
+  return normalizeData(candidate);
 }
 
 export function clearAllData(): AppData {

@@ -294,10 +294,23 @@ export default function InvoiceTemplate({
             </div>
           )}
 
+          {bill.deliveryCharge > 0 && (
+            <div className="flex justify-between py-0.5">
+              <span>Delivery charge</span>
+              <span>{formatCurrency(bill.deliveryCharge)}</span>
+            </div>
+          )}
+
           <div className="mt-1 flex items-center justify-between border-t-[1.5px] border-black pt-2 text-[15px] font-extrabold">
             <span>TOTAL</span>
             <span>{formatCurrency(bill.grandTotal)}</span>
           </div>
+          {(bill.dueAmount ?? 0) > 0 && (
+            <div className="mt-1 flex justify-between border-t border-black pt-1 font-bold">
+              <span>DUE</span>
+              <span>{formatCurrency(bill.dueAmount ?? 0)}</span>
+            </div>
+          )}
         </div>
       </section>
 

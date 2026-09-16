@@ -40,7 +40,13 @@ export interface Bill {
   items: BillItem[];
   subtotal: number;
   discount: number;
+  /** Added to the invoice total when the order is delivered. */
+  deliveryCharge: number;
   grandTotal: number;
+  /** Amount received so far. A missing value on an older bill means paid in full. */
+  paidAmount?: number;
+  /** Balance remaining after the received amount. */
+  dueAmount?: number;
 }
 
 export interface BusinessSettings {

@@ -23,6 +23,8 @@ export default function CreateBillPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [items, setItems] = useState<BillItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
+  const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
+  const [paidAmount, setPaidAmount] = useState<number>(0);
   const [busy, setBusy] = useState<SaveAction | null>(null);
   const [pdfBill, setPdfBill] = useState<Bill | null>(null);
   const hiddenInvoiceRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,10 @@ export default function CreateBillPage() {
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
   const safeDiscount = Math.min(Math.max(discount, 0), subtotal);
-  const grandTotal = Math.max(0, subtotal - safeDiscount);
+  const safeDeliveryCharge = Math.max(deliveryCharge, 0);
+  const grandTotal = Math.max(0, subtotal - safeDiscount + safeDeliveryCharge);
+  const safePaidAmount = Math.min(Math.max(paidAmount, 0), grandTotal);
+  const dueAmount = grandTotal - safePaidAmount;
 
   const handleAddItem = (payload: {
     productId: string;
@@ -61,6 +66,8 @@ export default function CreateBillPage() {
     setCustomerPhone("");
     setItems([]);
     setDiscount(0);
+    setDeliveryCharge(0);
+    setPaidAmount(0);
   };
 
   const buildBillPayload = (): Omit<Bill, "id" | "billNumber" | "createdAt"> => ({
@@ -71,7 +78,10 @@ export default function CreateBillPage() {
     items,
     subtotal,
     discount: safeDiscount,
-    grandTotal
+    deliveryCharge: safeDeliveryCharge,
+    grandTotal,
+    paidAmount: safePaidAmount,
+    dueAmount
   });
 
   const handleSave = async (action: SaveAction) => {
@@ -207,10 +217,23 @@ export default function CreateBillPage() {
               className="w-28 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1.5 text-right text-sm focus:border-spice-400 focus:outline-none focus:ring-2 focus:ring-spice-400/30"
             />
           </div>
+          <div className="flex items-center justify-between text-sm">
+            <label htmlFor="delivery-charge" className="text-[rgb(var(--text-muted))]">Delivery charge (₹)</label>
+            <input id="delivery-charge" type="number" min={0} value={deliveryCharge === 0 ? "" : deliveryCharge}
+              onChange={(e) => setDeliveryCharge(Number(e.target.value) || 0)} placeholder="0"
+              className="w-28 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1.5 text-right text-sm focus:border-spice-400 focus:outline-none focus:ring-2 focus:ring-spice-400/30" />
+          </div>
           <div className="flex items-center justify-between border-t border-[rgb(var(--border))] pt-3 text-base font-bold text-[rgb(var(--text))]">
             <span>Grand Total</span>
             <span>{formatCurrency(grandTotal)}</span>
           </div>
+          <div className="flex items-center justify-between text-sm">
+            <label htmlFor="paid-amount" className="text-[rgb(var(--text-muted))]">Amount received (₹)</label>
+            <input id="paid-amount" type="number" min={0} max={grandTotal} value={paidAmount === 0 ? "" : paidAmount}
+              onChange={(e) => setPaidAmount(Number(e.target.value) || 0)} placeholder="0"
+              className="w-28 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 py-1.5 text-right text-sm focus:border-spice-400 focus:outline-none focus:ring-2 focus:ring-spice-400/30" />
+          </div>
+          {dueAmount > 0 && <div className="flex items-center justify-between text-sm font-semibold text-amber-700 dark:text-amber-400"><span>Due balance</span><span>{formatCurrency(dueAmount)}</span></div>}
         </div>
       </div>
 

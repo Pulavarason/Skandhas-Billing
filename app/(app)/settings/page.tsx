@@ -195,7 +195,7 @@ export default function SettingsPage() {
           <h2 className="text-base font-semibold text-[rgb(var(--text))]">Data Management</h2>
         </div>
         <p className="mt-1 text-sm text-[rgb(var(--text-muted))]">
-          Everything is stored locally in this browser. Export a backup regularly so you never lose data.
+          Everything is stored locally in this browser. Export your data to Excel regularly so you never lose it.
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-xs">
@@ -214,13 +214,13 @@ export default function SettingsPage() {
             onClick={exportBackup}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] shadow-soft transition hover:bg-[rgb(var(--border))]/40"
           >
-            <Download className="h-4 w-4" /> Export Backup
+            <Download className="h-4 w-4" /> Export Excel
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="inline-flex items-center gap-1.5 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] shadow-soft transition hover:bg-[rgb(var(--border))]/40"
           >
-            <Upload className="h-4 w-4" /> Import Backup
+            <Upload className="h-4 w-4" /> Import JSON Backup
           </button>
           <input
             ref={fileInputRef}

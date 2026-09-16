@@ -1,4 +1,4 @@
-import { LayoutDashboard, FilePlus2, Package, Receipt, Settings } from "lucide-react";
+import { LayoutDashboard, FilePlus2, Package, Receipt, Settings, CircleDollarSign } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -11,5 +11,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/bills/create", label: "Create Bill", icon: FilePlus2 },
   { href: "/products", label: "Products", icon: Package },
   { href: "/bills", label: "Bills", icon: Receipt },
+  { href: "/dues", label: "Dues", icon: CircleDollarSign },
   { href: "/settings", label: "Settings", icon: Settings }
 ];

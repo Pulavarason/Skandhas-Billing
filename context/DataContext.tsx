@@ -12,7 +12,6 @@ import { AppData, Bill, BusinessSettings, Product } from "@/lib/types";
 import {
   addBillToData,
   addProductToData,
-  buildBackup,
   clearAllData,
   deleteBillFromData,
   deleteProductFromData,
@@ -20,9 +19,11 @@ import {
   parseBackupFile,
   saveData,
   updateProductInData,
+  updateBillInData,
   updateSettingsInData
 } from "@/lib/storage";
 import { formatBillNumber } from "@/lib/format";
+import { downloadExcelExport } from "@/lib/excel";
 
 interface DataContextValue {
   data: AppData;
@@ -33,6 +34,7 @@ interface DataContextValue {
   deleteProduct: (productId: string) => void;
   addBill: (bill: Omit<Bill, "id" | "billNumber" | "createdAt">) => Bill;
   deleteBill: (billId: string) => void;
+  recordPayment: (billId: string, amount: number) => void;
   updateSettings: (settings: BusinessSettings) => void;
   exportBackup: () => void;
   importBackup: (file: File) => Promise<void>;
@@ -110,6 +112,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  const recordPayment = useCallback(
+    (billId: string, amount: number) => {
+      if (!Number.isFinite(amount) || amount <= 0) return;
+      persist((prev) => {
+        const bill = prev.bills.find((entry) => entry.id === billId);
+        if (!bill) return prev;
+        const alreadyPaid = bill.paidAmount ?? bill.grandTotal;
+        const paidAmount = Math.min(bill.grandTotal, alreadyPaid + amount);
+        return updateBillInData(prev, { ...bill, paidAmount, dueAmount: Math.max(0, bill.grandTotal - paidAmount) });
+      });
+    },
+    [persist]
+  );
+
   const updateSettings = useCallback(
     (settings: BusinessSettings) =>
       persist((prev) => updateSettingsInData(prev, settings)),
@@ -117,19 +133,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   const exportBackup = useCallback(() => {
-    const backup = buildBackup(data);
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: "application/json"
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = `skandhas-masala-backup-${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    downloadExcelExport(data);
   }, [data]);
 
   const importBackup = useCallback(async (file: File) => {
@@ -157,6 +161,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         deleteProduct,
         addBill,
         deleteBill,
+        recordPayment,
         updateSettings,
         exportBackup,
         importBackup,

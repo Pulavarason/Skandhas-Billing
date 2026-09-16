@@ -89,13 +89,12 @@ export default function ProductForm({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="product-form-title"
-      className="fixed inset-0 z-[85] flex items-end justify-center bg-black/40 animate-fade-in sm:items-center sm:p-4"
-      onClick={onClose}
-    >
+        <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-form-title"
+        className="fixed inset-0 z-[85] flex items-end justify-center bg-black/40 animate-fade-in sm:items-center sm:p-4"
+      >
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-card animate-scale-in sm:rounded-2xl"
