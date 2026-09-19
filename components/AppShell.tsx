@@ -10,6 +10,10 @@ import { useData } from "@/context/DataContext";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
+  // The create route belongs to its own navigation item, not the Bills list.
+  if (href === "/bills") {
+    return pathname === "/bills" || (pathname.startsWith("/bills/") && pathname !== "/bills/create");
+  }
   return pathname === href || pathname.startsWith(href + "/");
 }
 
