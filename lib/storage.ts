@@ -6,6 +6,10 @@ import { formatBillNumber } from "./format";
 const STORAGE_KEY = "skandhas-masala-data-v2";
 const LEGACY_STORAGE_KEY = "skandhas-masala-data-v1";
 const APP_VERSION = 2;
+const DATABASE_NAME = "skandhas-masala-billing";
+const DATABASE_VERSION = 1;
+const DATABASE_STORE = "app-data";
+const DATABASE_RECORD_KEY = "current";
 
 export class StorageError extends Error {}
 
@@ -64,49 +68,92 @@ function isLocalStorageAvailable(): boolean {
   }
 }
 
-export function loadData(): AppData {
-  if (!isLocalStorageAvailable()) {
-    // No persistent storage available (private browsing, disabled storage, etc.)
-    // Fall back to a fresh in-memory empty dataset so the app still works.
-    return createEmptyData();
-  }
-
+function readLocalData(): AppData | null {
+  if (!isLocalStorageAvailable()) return null;
   try {
-    // The v1 key contained the shipped placeholder records; remove it once so
-    // they do not remain in the browser's local storage.
     window.localStorage.removeItem(LEGACY_STORAGE_KEY);
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      const initial = createEmptyData();
-      persist(initial);
-      return initial;
-    }
+    if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!isValidAppData(parsed)) {
-      throw new StorageError("Corrupted data shape");
-    }
-    return normalizeData(parsed);
-  } catch (err) {
-    // Corrupted / invalid JSON — recover gracefully instead of crashing the app.
-    const initial = createEmptyData();
-    try {
-      persist(initial);
-    } catch {
-      /* ignore secondary failure */
-    }
-    return initial;
+    return isValidAppData(parsed) ? normalizeData(parsed) : null;
+  } catch {
+    return null;
   }
 }
 
-function persist(data: AppData): void {
-  if (!isLocalStorageAvailable()) return;
+/** Mirror data in IndexedDB, which is more resilient than localStorage on mobile browsers. */
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      reject(new StorageError("IndexedDB is not available in this browser."));
+      return;
+    }
+    const request = window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+    request.onerror = () => reject(request.error ?? new StorageError("Could not open local database."));
+    request.onupgradeneeded = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(DATABASE_STORE)) database.createObjectStore(DATABASE_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+async function readIndexedData(): Promise<AppData | null> {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (err) {
-    throw new StorageError(
-      "Could not save data to your browser's storage. It may be full or disabled."
-    );
+    const database = await openDatabase();
+    return await new Promise<AppData | null>((resolve, reject) => {
+      const transaction = database.transaction(DATABASE_STORE, "readonly");
+      const request = transaction.objectStore(DATABASE_STORE).get(DATABASE_RECORD_KEY);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(isValidAppData(request.result) ? normalizeData(request.result) : null);
+      transaction.oncomplete = () => database.close();
+      transaction.onerror = () => database.close();
+    });
+  } catch {
+    return null;
   }
+}
+
+async function persistIndexedData(data: AppData): Promise<void> {
+  const database = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(DATABASE_STORE, "readwrite");
+    transaction.objectStore(DATABASE_STORE).put(data, DATABASE_RECORD_KEY);
+    transaction.oncomplete = () => { database.close(); resolve(); };
+    transaction.onerror = () => { database.close(); reject(transaction.error); };
+  });
+}
+
+export function loadData(): AppData {
+  return readLocalData() ?? createEmptyData();
+}
+
+/** Load localStorage first, then recover from the IndexedDB mirror if necessary. */
+export async function loadPersistentData(): Promise<AppData> {
+  const localData = readLocalData();
+  if (localData) {
+    void persistIndexedData(localData).catch(() => undefined);
+    return localData;
+  }
+  const indexedData = await readIndexedData();
+  if (indexedData) {
+    persist(indexedData);
+    return indexedData;
+  }
+  const initial = createEmptyData();
+  persist(initial);
+  return initial;
+}
+
+function persist(data: AppData): void {
+  if (isLocalStorageAvailable()) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // IndexedDB remains available as a fallback when localStorage writes fail.
+    }
+  }
+  void persistIndexedData(data).catch(() => undefined);
 }
 
 export function saveData(data: AppData): void {

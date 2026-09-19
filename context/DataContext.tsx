@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode
 } from "react";
@@ -15,7 +16,7 @@ import {
   clearAllData,
   deleteBillFromData,
   deleteProductFromData,
-  loadData,
+  loadPersistentData,
   parseBackupFile,
   saveData,
   updateProductInData,
@@ -62,19 +63,26 @@ const emptyData: AppData = {
 export function DataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(emptyData);
   const [isReady, setIsReady] = useState(false);
+  const dataRef = useRef<AppData>(emptyData);
 
   useEffect(() => {
-    const loaded = loadData();
-    setData(loaded);
-    setIsReady(true);
+    let mounted = true;
+    void loadPersistentData().then((loaded) => {
+      if (!mounted) return;
+      dataRef.current = loaded;
+      setData(loaded);
+      setIsReady(true);
+    });
+    return () => { mounted = false; };
   }, []);
 
   const persist = useCallback((updater: (prev: AppData) => AppData) => {
-    setData((prev) => {
-      const next = updater(prev);
-      saveData(next);
-      return next;
-    });
+    // Commit before a mobile route change can unmount the current page.
+    const next = updater(dataRef.current);
+    saveData(next);
+    dataRef.current = next;
+    setData(next);
+    return next;
   }, []);
 
   const addProduct = useCallback(
@@ -94,7 +102,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addBill = useCallback(
     (bill: Omit<Bill, "id" | "billNumber" | "createdAt">): Bill => {
-      const billNumber = formatBillNumber(data.billCounter);
+      const billNumber = formatBillNumber(dataRef.current.billCounter);
       const fullBill: Bill = {
         ...bill,
         id: `bill_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -104,7 +112,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       persist((prev) => addBillToData(prev, fullBill));
       return fullBill;
     },
-    [persist, data.billCounter]
+    [persist]
   );
 
   const deleteBill = useCallback(
@@ -140,15 +148,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const text = await file.text();
     const parsed = parseBackupFile(text);
     saveData(parsed);
+    dataRef.current = parsed;
     setData(parsed);
   }, []);
 
   const wipeAllData = useCallback(() => {
     const empty = clearAllData();
+    dataRef.current = empty;
     setData(empty);
   }, []);
 
-  const nextBillNumberPreview = formatBillNumber(data.billCounter);
+  const nextBillNumberPreview = formatBillNumber(dataRef.current.billCounter);
 
   return (
     <DataContext.Provider
