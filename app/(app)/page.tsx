@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, CalendarDays, IndianRupee, Receipt, ScrollText } from "lucide-react";
+import { BarChart3, IndianRupee, Package, Receipt, ScrollText } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import StatCard from "@/components/StatCard";
 import EmptyState from "@/components/EmptyState";
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Today's Sales" value={formatCurrency(todaysSales)} icon={IndianRupee} />
-        <StatCard label="This Month" value={formatCurrency(monthlySales)} icon={CalendarDays} />
+        <StatCard label="Total Products" value={String(data.products.length)} icon={Package} />
         <StatCard label="This Year" value={formatCurrency(yearlySales)} icon={BarChart3} />
         <StatCard label="Total Bills" value={String(data.bills.length)} icon={ScrollText} hint={`${billsToday.length} today`} />
       </div>

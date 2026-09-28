@@ -2,20 +2,21 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Printer, RotateCcw, Save } from "lucide-react";
+import { Download, Plus, Printer, RotateCcw, Save } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
 import ProductSelector from "@/components/ProductSelector";
+import ProductForm from "@/components/ProductForm";
 import BillItemsTable from "@/components/BillItemsTable";
 import InvoiceTemplate from "@/components/InvoiceTemplate";
-import { Bill, BillItem } from "@/lib/types";
+import { Bill, BillItem, Product } from "@/lib/types";
 import { formatCurrency, formatDateDisplay, todayIso, nowTime } from "@/lib/format";
 import { generateInvoicePdf } from "@/lib/pdf";
 
 type SaveAction = "save" | "print" | "pdf";
 
 export default function CreateBillPage() {
-  const { data, isReady, addBill, nextBillNumberPreview } = useData();
+  const { data, isReady, addBill, addProduct, nextBillNumberPreview } = useData();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -26,6 +27,7 @@ export default function CreateBillPage() {
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [busy, setBusy] = useState<SaveAction | null>(null);
   const [pdfBill, setPdfBill] = useState<Bill | null>(null);
+  const [productFormOpen, setProductFormOpen] = useState(false);
   const hiddenInvoiceRef = useRef<HTMLDivElement>(null);
 
   const activeProducts = useMemo(
@@ -56,6 +58,12 @@ export default function CreateBillPage() {
 
   const handleRemoveItem = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddProduct = (product: Product) => {
+    addProduct(product);
+    setProductFormOpen(false);
+    showToast(`"${product.name}" added to your catalog. You can now select it for this bill.`);
   };
 
   const clearForm = () => {
@@ -177,9 +185,18 @@ export default function CreateBillPage() {
       </div>
 
       {/* Product selector */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-[rgb(var(--text))]">Add products to this bill</h3>
+          <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Need a new item? Add it here without losing this bill.</p>
+        </div>
+        <button type="button" onClick={() => setProductFormOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-spice-600 px-4 py-2.5 text-sm font-semibold text-spice-700 transition hover:bg-spice-50 dark:text-spice-300 dark:hover:bg-spice-950/40">
+          <Plus className="h-4 w-4" /> Add Product
+        </button>
+      </div>
       {activeProducts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[rgb(var(--border))] p-6 text-center text-sm text-[rgb(var(--text-muted))]">
-          No active products available for billing. Add products from the Products page first.
+          No active products available for billing yet. Use Add Product above to create one.
         </div>
       ) : (
         <ProductSelector products={activeProducts} onAdd={handleAddItem} />
@@ -257,6 +274,12 @@ export default function CreateBillPage() {
           <Download className="h-4 w-4" /> {busy === "pdf" ? "Generating PDF..." : "Save PDF"}
         </button>
       </div>
+
+      <ProductForm
+        open={productFormOpen}
+        onClose={() => setProductFormOpen(false)}
+        onSave={handleAddProduct}
+      />
 
       {/* Hidden invoice used purely for PDF capture */}
       {pdfBill && (
