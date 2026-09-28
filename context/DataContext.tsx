@@ -34,6 +34,7 @@ interface DataContextValue {
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   addBill: (bill: Omit<Bill, "id" | "billNumber" | "createdAt">) => Bill;
+  updateBill: (bill: Bill) => void;
   deleteBill: (billId: string) => void;
   recordPayment: (billId: string, amount: number) => void;
   updateSettings: (settings: BusinessSettings) => void;
@@ -115,6 +116,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  const updateBill = useCallback(
+    (bill: Bill) => persist((prev) => updateBillInData(prev, bill)),
+    [persist]
+  );
+
   const deleteBill = useCallback(
     (billId: string) => persist((prev) => deleteBillFromData(prev, billId)),
     [persist]
@@ -170,6 +176,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateProduct,
         deleteProduct,
         addBill,
+        updateBill,
         deleteBill,
         recordPayment,
         updateSettings,

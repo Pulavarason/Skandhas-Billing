@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Receipt, Trash2 } from "lucide-react";
+import { Eye, Pencil, Receipt, Trash2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
 import SearchInput from "@/components/SearchInput";
@@ -118,6 +118,13 @@ export default function BillsPage() {
                           className="rounded-lg p-2 text-[rgb(var(--text-muted))] hover:bg-spice-50 hover:text-spice-700 dark:hover:bg-spice-900/30 dark:hover:text-spice-400"
                         >
                           <Eye className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          href={`/bills/${bill.id}/edit`}
+                          aria-label={`Edit bill ${bill.billNumber}`}
+                          className="rounded-lg p-2 text-[rgb(var(--text-muted))] hover:bg-spice-50 hover:text-spice-700 dark:hover:bg-spice-900/30 dark:hover:text-spice-400"
+                        >
+                          <Pencil className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => setDeleteTarget(bill)}
