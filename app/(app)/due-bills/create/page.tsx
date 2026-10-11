@@ -77,7 +77,7 @@ export default function CreateDueBillPage() {
   const buildBillPayload = (): Omit<Bill, "id" | "billNumber" | "createdAt"> => ({
     date: todayIso(),
     time: nowTime(),
-    customerName: customerName.trim(),
+    customerName: customerName.trim() || undefined,
     customerPhone: customerPhone.trim() || undefined,
     items,
     subtotal,
@@ -89,10 +89,6 @@ export default function CreateDueBillPage() {
   });
 
   const handleSave = async (action: SaveAction) => {
-    if (!customerName.trim() || !customerPhone.trim()) {
-      showToast("Enter the customer name and phone number for a due bill.", "error");
-      return;
-    }
     if (items.length === 0) {
       showToast("Add at least one item before saving the bill.", "error");
       return;

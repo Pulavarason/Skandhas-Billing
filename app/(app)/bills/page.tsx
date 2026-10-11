@@ -86,6 +86,7 @@ export default function BillsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[rgb(var(--border))] bg-[rgb(var(--border))]/20 text-left text-xs font-semibold uppercase tracking-wide text-[rgb(var(--text-muted))]">
+                  <th className="px-5 py-3">S. No.</th>
                   <th className="px-5 py-3">Bill Number</th>
                   <th className="px-5 py-3">Date</th>
                   <th className="px-5 py-3">Customer</th>
@@ -95,8 +96,9 @@ export default function BillsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgb(var(--border))]">
-                {filtered.map((bill) => (
+                {filtered.map((bill, index) => (
                   <tr key={bill.id} className="transition hover:bg-[rgb(var(--border))]/20">
+                    <td className="px-5 py-3.5 text-[rgb(var(--text-muted))]">{index + 1}</td>
                     <td className="px-5 py-3.5 font-medium text-[rgb(var(--text))]">{bill.billNumber}</td>
                     <td className="px-5 py-3.5 text-[rgb(var(--text-muted))]">
                       {formatDateDisplay(bill.date)}
@@ -143,14 +145,14 @@ export default function BillsPage() {
 
           {/* Mobile cards */}
           <div className="grid grid-cols-1 gap-3 md:hidden">
-            {filtered.map((bill) => (
+            {filtered.map((bill, index) => (
               <Link
                 key={bill.id}
                 href={`/bills/${bill.id}`}
                 className="block rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-4 shadow-soft"
               >
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-[rgb(var(--text))]">{bill.billNumber}</p>
+                  <p className="font-medium text-[rgb(var(--text))]">{index + 1}. {bill.billNumber}</p>
                   <p className="font-semibold text-[rgb(var(--text))]">{formatCurrency(bill.grandTotal)}</p>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-xs text-[rgb(var(--text-muted))]">
