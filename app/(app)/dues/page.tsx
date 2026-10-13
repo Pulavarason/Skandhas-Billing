@@ -6,14 +6,28 @@ import { CircleDollarSign, FilePlus2 } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
 import EmptyState from "@/components/EmptyState";
+import SearchInput from "@/components/SearchInput";
 import { formatCurrency, formatDateDisplay } from "@/lib/format";
 
 export default function DuesPage() {
   const { data, isReady, recordPayment } = useData();
   const { showToast } = useToast();
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const dueBills = useMemo(() => data.bills.filter((bill) => (bill.dueAmount ?? 0) > 0)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [data.bills]);
+  const filteredDueBills = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return dueBills.filter((bill) => {
+      const matchesSearch = !query ||
+        bill.billNumber.toLowerCase().includes(query) ||
+        (bill.customerName ?? "").toLowerCase().includes(query) ||
+        (bill.customerPhone ?? "").toLowerCase().includes(query);
+      const matchesDate = !dateFilter || bill.date === dateFilter;
+      return matchesSearch && matchesDate;
+    });
+  }, [dueBills, search, dateFilter]);
   const totalDue = dueBills.reduce((sum, bill) => sum + (bill.dueAmount ?? 0), 0);
 
   const collect = (id: string, billNumber: string, due: number) => {
@@ -37,9 +51,29 @@ export default function DuesPage() {
       <Link href="/due-bills/create" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-spice-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-spice-700"><FilePlus2 className="h-4 w-4" /> Create Due Bill</Link>
     </div>
     {dueBills.length === 0 ? <EmptyState icon={CircleDollarSign} title="No outstanding dues" description="Partially paid and unpaid bills will appear here." /> : (
+      <>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search bill no. or customer..." className="sm:max-w-xs" />
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+          aria-label="Filter by date"
+          className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3.5 py-2.5 text-sm focus:border-spice-400 focus:outline-none focus:ring-2 focus:ring-spice-400/30"
+        />
+        {dateFilter && (
+          <button
+            onClick={() => setDateFilter("")}
+            className="text-xs font-medium text-spice-600 hover:underline dark:text-spice-400"
+          >
+            Clear date
+          </button>
+        )}
+      </div>
+      {filteredDueBills.length === 0 ? <EmptyState icon={CircleDollarSign} title="No matching due bills" description="Try a different search or date." /> : (
       <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-soft">
         <div className="divide-y divide-[rgb(var(--border))]">
-          {dueBills.map((bill) => {
+          {filteredDueBills.map((bill) => {
             const due = bill.dueAmount ?? 0;
             return <div key={bill.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div><Link href={`/bills/${bill.id}`} className="font-semibold text-spice-700 hover:underline dark:text-spice-400">{bill.billNumber}</Link>
@@ -52,6 +86,8 @@ export default function DuesPage() {
           })}
         </div>
       </div>
+      )}
+      </>
     )}
   </div>;
 }
