@@ -24,6 +24,7 @@ export default function BillItemsTable({ items, onRemove }: BillItemsTableProps)
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[rgb(var(--border))] bg-[rgb(var(--border))]/20 text-left text-xs font-semibold uppercase tracking-wide text-[rgb(var(--text-muted))]">
+              <th className="px-4 py-3">S.NO</th>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Size</th>
               <th className="px-4 py-3 text-right">Qty</th>
@@ -35,6 +36,7 @@ export default function BillItemsTable({ items, onRemove }: BillItemsTableProps)
           <tbody className="divide-y divide-[rgb(var(--border))]">
             {items.map((item, idx) => (
               <tr key={`${item.variantId}-${idx}`}>
+                <td className="whitespace-nowrap px-4 py-3 text-[rgb(var(--text-muted))]">{idx + 1}</td>
                 <td className="whitespace-nowrap px-4 py-3 font-medium text-[rgb(var(--text))]">
                   {item.productName}
                 </td>

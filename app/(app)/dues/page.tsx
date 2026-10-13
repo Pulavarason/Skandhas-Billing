@@ -13,7 +13,7 @@ export default function DuesPage() {
   const { showToast } = useToast();
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const dueBills = useMemo(() => data.bills.filter((bill) => (bill.dueAmount ?? 0) > 0)
-    .sort((a, b) => a.date.localeCompare(b.date)), [data.bills]);
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [data.bills]);
   const totalDue = dueBills.reduce((sum, bill) => sum + (bill.dueAmount ?? 0), 0);
 
   const collect = (id: string, billNumber: string, due: number) => {

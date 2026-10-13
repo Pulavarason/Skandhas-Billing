@@ -62,7 +62,7 @@ export default function ViewBillPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto w-full max-w-5xl space-y-5">
       <div className="flex items-center justify-between">
         <Link
           href="/bills"
@@ -87,8 +87,8 @@ export default function ViewBillPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-gray-100 p-4 shadow-soft dark:bg-gray-900/40 sm:p-8">
-        <div className="mx-auto w-full max-w-[420px] overflow-hidden rounded-lg shadow-card">
+      <div className="overflow-x-auto rounded-2xl border border-[rgb(var(--border))] bg-gray-100 p-3 shadow-soft dark:bg-gray-900/40 sm:p-8">
+        <div className="mx-auto w-full min-w-[min(100%,420px)] max-w-[794px] rounded-lg shadow-card">
           <InvoiceTemplate bill={bill} settings={data.settings} innerRef={invoiceRef} />
         </div>
       </div>

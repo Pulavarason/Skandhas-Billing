@@ -89,6 +89,10 @@ export default function CreateBillPage() {
   });
 
   const handleSave = async (action: SaveAction) => {
+    if (!customerName.trim()) {
+      showToast("Enter the customer name before saving the bill.", "error");
+      return;
+    }
     if (items.length === 0) {
       showToast("Add at least one item before saving the bill.", "error");
       return;
@@ -157,14 +161,14 @@ export default function CreateBillPage() {
           </div>
           <div>
             <label htmlFor="customer-name" className="mb-1.5 block text-sm font-medium text-[rgb(var(--text))]">
-              Customer Name <span className="font-normal text-[rgb(var(--text-muted))]">(optional)</span>
+              Customer Name <span className="text-red-600">*</span>
             </label>
             <input
               id="customer-name"
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Walk-in customer"
+              placeholder="Customer name"
               className="w-full rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3.5 py-2.5 text-sm focus:border-spice-400 focus:outline-none focus:ring-2 focus:ring-spice-400/30"
             />
           </div>

@@ -89,6 +89,10 @@ export default function CreateDueBillPage() {
   });
 
   const handleSave = async (action: SaveAction) => {
+    if (!customerName.trim()) {
+      showToast("Enter the customer name before saving the due bill.", "error");
+      return;
+    }
     if (items.length === 0) {
       showToast("Add at least one item before saving the bill.", "error");
       return;
@@ -158,7 +162,7 @@ export default function CreateDueBillPage() {
           </div>
           <div>
             <label htmlFor="customer-name" className="mb-1.5 block text-sm font-medium text-[rgb(var(--text))]">
-              Customer Name
+              Customer Name <span className="text-red-600">*</span>
             </label>
             <input
               id="customer-name"
@@ -171,7 +175,7 @@ export default function CreateDueBillPage() {
           </div>
           <div>
             <label htmlFor="customer-phone" className="mb-1.5 block text-sm font-medium text-[rgb(var(--text))]">
-              Customer Phone
+              Customer Phone <span className="font-normal text-[rgb(var(--text-muted))]">(optional)</span>
             </label>
             <input
               id="customer-phone"
